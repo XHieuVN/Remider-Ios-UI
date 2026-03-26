@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS Desktop Calendar & Reminders</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="script.js" defer></script>
+    <script src="common-utils.js" defer></script>
+    <script src="event.js"></script>
+    <script src="reminder.js"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <div class="sidebar">
+            <h2 id="sidebarMonthTitle" style="color: var(--ios-blue)"></h2>
+            <div class="sidebar-stats" style="margin-top: 20px; color: var(--text-sub);">
+
+                <div class="stat-group">
+                    <h3 style="font-size: 14px; margin-bottom: 5px; color: #8e8e93; text-transform: uppercase;">Tổng
+                        quan tháng</h3>
+                    <p>• Sự kiện: <strong id="countEvent">0</strong></p>
+                    <p>• Lời nhắc: <strong id="countReminder">0</strong></p>
+                </div>
+
+                <div style="height: 1px; background: #e5e5ea; margin: 15px 0;"></div>
+
+                <div class="stat-group">
+                    <h3 style="font-size: 14px; margin-bottom: 5px; color: #8e8e93; text-transform: uppercase;">Trạng
+                        thái</h3>
+                    <div class="sidebar-stats" style="margin-top: 20px;">
+                        <p style="color: #ff3b30; font-weight: 500;">• Trễ hạn: <strong id="countOverdue">0</strong></p>
+                        <p style="color: #34c759; font-weight: 500;">• Đã hoàn thành: <strong
+                                id="countCompleted">0</strong></p>
+                        <p style="color:#007aff; font-weight: 500;">• Chưa làm: <strong id="countPending">0</strong>
+                        </p>
+                        <p style="font-weight: 500;">• Trong 3 ngày tới: <strong
+                                id="countNext3Days">0</strong></p>
+                        <p style="font-weight: 500;">• Trong tuần này: <strong
+                                id="countThisWeek">0</strong></p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <div class="nav-month">
+                    <button onclick="changeMonthHome(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <h1 id="mainMonthTitle"></h1>
+                    <button onclick="changeMonthHome(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <button class="add-btn" onclick="openModal()">+</button>
+            </div>
+
+            <div class="calendar-grid" id="calendarGrid">
+                <div class="day-header">T2</div>
+                <div class="day-header">T3</div>
+                <div class="day-header">T4</div>
+                <div class="day-header">T5</div>
+                <div class="day-header">T6</div>
+                <div class="day-header">T7</div>
+                <div class="day-header">CN</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- bảng add sự kiện -->
+    <div class="modal-overlay" id="modal">
+        <link rel="stylesheet" href="reminder.css">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="btn-cancel" onclick="closeModal()">Hủy</span>
+                <div class="tab-switch" style="width: 170px;">
+                    <div style="display: none;" class="tab" onclick="switchTab('event', this)">Sự kiện</div>
+                    <div class="tab active" onclick="switchTab('reminder', this)">Lời nhắc</div>
+                </div>
+                <span class="btn-add" onclick="handleSave()">Thêm</span>
+            </div>
+
+            <div class="modal-body">
+                <div class="event-setup" id="event-fields" style="display: none;">
+                    <div class="input-group">
+                        <input type="text" id="event-title" placeholder="Tiêu đề">
+                        <input type="text" id="event-location" placeholder="Vị trí hoặc cuộc gọi video">
+                    </div>
+
+                    <div class="input-group" style="overflow: visible;">
+                        <div class="input-row">
+                            <span>Bắt đầu</span>
+                            <div class="datetime-display">
+                                <span class="time-box clickable"
+                                    onclick="toggleLocalPicker('picker-start-time')">17:00</span>
+                                <span class="date-box clickable"
+                                    onclick="toggleLocalPicker('picker-start-date')">18/3/26</span>
+                            </div>
+                        </div>
+                        <div id="picker-start-time" class="time-picker-container local-picker">
+                            <div class="picker-overlay"></div>
+                            <div class="wheel hour-wheel" data-target="start-time"></div>
+                            <div class="separator">:</div>
+                            <div class="wheel minute-wheel" data-target="start-time"></div>
+                        </div>
+                        <div id="picker-start-date" class="calendar-wrapper local-picker" style="display: none;">
+                            <div class="calendar-header-nav">
+                                <span class="month-year-label">Tháng 3 năm 2026</span>
+                                <div class="nav-btns">
+                                    <button onclick="changeMonthLocal(this, -1)"><i
+                                            class="fas fa-chevron-left"></i></button>
+                                    <button onclick="changeMonthLocal(this, 1)"><i
+                                            class="fas fa-chevron-right"></i></button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid"></div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="input-row">
+                            <span>Kết thúc</span>
+                            <div class="datetime-display">
+                                <span class="time-box clickable"
+                                    onclick="toggleLocalPicker('picker-end-time')">18:00</span>
+                                <span class="date-box clickable"
+                                    onclick="toggleLocalPicker('picker-end-date')">18/3/26</span>
+                            </div>
+                        </div>
+                        <div id="picker-end-time" class="time-picker-container local-picker">
+                            <div class="picker-overlay"></div>
+                            <div class="wheel hour-wheel" data-target="end-time"></div>
+                            <div class="separator">:</div>
+                            <div class="wheel minute-wheel" data-target="end-time"></div>
+                        </div>
+                        <div id="picker-end-date" class="calendar-wrapper local-picker" style="display: none;">
+                            <div class="calendar-header-nav">
+                                <span class="month-year-label">Tháng 3 năm 2026</span>
+                                <div class="nav-btns">
+                                    <button onclick="changeMonthLocal(this, -1)"><i
+                                            class="fas fa-chevron-left"></i></button>
+                                    <button onclick="changeMonthLocal(this, 1)"><i
+                                            class="fas fa-chevron-right"></i></button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid"></div>
+                        </div>
+
+                        <div class="input-group" style="overflow: visible;">
+                            <div class="input-row clickable" onclick="toggleTravelPicker()">
+                                <span>Thời gian di chuyển</span>
+                                <div class="row-right">
+                                    <span class="sub-text" id="travel-time-display">Không có</span>
+                                    <i class="fas fa-chevron-down selector-icon" id="travel-chevron"></i>
+                                </div>
+                            </div>
+                            <div id="travel-picker-container" class="time-picker-container">
+                                <div class="picker-overlay"></div>
+                                <div class="wheel" id="travel-number-wheel"></div>
+                                <div class="wheel" id="travel-unit-wheel"></div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="input-group">
+                            <div class="input-row clickable"
+                                onclick="toggleLocalPicker('event-early-picker-container')">
+                                <div class="row-left">
+                                    <div class="icon-bg purple"><i class="fas fa-bell"></i></div>
+                                    <span class="main-label">Lời nhắc sớm</span>
+                                </div>
+                                <div class="row-right">
+                                    <span class="sub-text" id="early-event-display" style="color: #8e8e93;"></span>
+                                    <i class="fas fa-chevron-down selector-icon" id="early-chevron"></i>
+                                </div>
+                            </div>
+                            <div id="event-early-picker-container" class="time-picker-container">
+                                <div class="picker-overlay"></div>
+                                <div class="wheel" id="event-early-number-wheel"></div>
+                                <div class="wheel" id="event-early-unit-wheel"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ios-container" id="reminder-fields">
+                    <div class="input-group">
+                        <input type="text" class="ios-input" placeholder="Tiêu đề">
+                        <div class="divider"></div>
+                        <textarea class="ios-textarea" placeholder="Ghi chú" rows="3"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-row clickable" onclick="toggleCompletionStatus()">
+                            <div class="row-left">
+                                <div id="status-icon-bg" class="icon-bg gray"><i class="fas fa-check"></i></div>
+                                <span class="main-label">Trạng thái</span>
+                            </div>
+                            <div class="row-right">
+                                <span id="completion-status-text" class="status-text overdue">[x] chưa làm</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-row clickable" onclick="openDatePicker('reminder-date-display')">
+                            <div class="row-left">
+                                <div class="icon-bg red"><i class="fas fa-calendar-alt"></i></div>
+                                <div class="label-group">
+                                    <span class="main-label color-red">Ngày</span>
+                                    <span class="sub-label color-red" id="reminder-date-display"></span>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right arrow-icon"></i>
+                        </div>
+                        <div id="reminder-calendar" class="calendar-wrapper" style="display: none;">
+                            <div class="calendar-header-nav">
+                                <span id="current-month-year-reminder"></span>
+                                <div class="nav-btns">
+                                    <button onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                                    <button onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                                </div>
+                            </div>
+                            <div id="calendar-days-reminder" class="calendar-grid"></div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="input-row clickable" onclick="openTimePicker('reminder-time-display')">
+                            <div class="row-left">
+                                <div class="icon-bg blue"><i class="fas fa-clock"></i></div>
+                                <div class="label-group" id="hour-label-group">
+                                    <span class="main-label">Thời gian</span>
+                                    <span class="sub-label color-red" id="reminder-time-display">00:00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="reminder-time-picker" class="time-picker-container">
+                            <div class="picker-overlay"></div>
+                            <div class="wheel" id="hour-wheel-reminder"></div>
+                            <div class="separator">:</div>
+                            <div class="wheel" id="minute-wheel-reminder"></div>
+                        </div>
+                    </div>
+                    <div class="input-group" style="overflow: visible;">
+                        <div class="input-row clickable" onclick="toggleReminderEarlyPicker()">
+                            <div class="row-left">
+                                <div class="icon-bg purple"><i class="fas fa-bell"></i></div>
+                                <span class="main-label">Lời nhắc sớm</span>
+                            </div>
+                            <div class="row-right">
+                                <span class="sub-text" id="reminder-early-display" style="color: #8e8e93;">Trước 1
+                                    phút</span>
+                                <i class="fas fa-chevron-up-down selector-icon" id="reminder-early-chevron"></i>
+                            </div>
+                        </div>
+                        <div id="reminder-early-picker-container" class="time-picker-container">
+                            <div class="picker-overlay"></div>
+                            <div class="wheel" id="reminder-early-number-wheel"></div>
+                            <div class="wheel" id="reminder-early-unit-wheel"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!--chi tiết remider của ngày-->
+    <link rel="stylesheet" href="detailday.css">
+    <script src="detailday.js"></script>
+
+    <div id="detailsOverlay" class="modal-overlay" onclick="closeDetails()">
+        <div id="detailsPanel" class="details-panel" onclick="event.stopPropagation()">
+            <div class="details-header">
+                <h2 id="detailsDateTitle"></h2>
+                <button onclick="closeDetails()" class="close-btn">&times;</button>
+            </div>
+            <div id="detailsContent" class="details-content"></div>
+        </div>
+    </div>
+</body>
+
+</html>

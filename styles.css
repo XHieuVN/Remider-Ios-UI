@@ -1,0 +1,205 @@
+/* Màu mặc định: Chưa làm (Đỏ/Xám) */
+.status-text.overdue { color: #ff3b30; font-weight: 600; }
+
+/* Màu khi: Đã làm (Xanh lá) */
+.status-text.completed { color: #34c759; font-weight: 600; }
+
+.input-row.clickable:active {
+    background-color: #f2f2f7; /* Hiệu ứng nhấn nhẹ của iOS */
+}
+
+:root {
+    --ios-red: #ff3b30;
+    --ios-blue: #007aff;
+    --ios-bg: #f2f2f7;
+    --ios-card: #ffffff;
+    --text-main: #000000;
+    --text-sub: #8e8e93;
+    --border-color: #e5e5ea;
+}
+
+.deadline-warning {
+    background-color: rgba(255, 149, 0, 0.15) !important;
+    border-left: 5px solid #ff9500 !important;
+}
+
+.deadline-warning .title {
+    color: #ff9500 !important;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--ios-bg);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Container chính */
+.app-container {
+    width: 1200px;
+    height: 720px;
+    background: var(--ios-card);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    display: flex;
+    overflow: hidden;
+}
+
+/* Sidebar bên trái */
+.sidebar {
+    width: 180px;
+    border-right: 1px solid var(--border-color);
+    padding: 20px;
+    background: #f9f9f9;
+}
+
+/* Lưới lịch tháng */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.nav-month h1 {
+    margin: 0;                  /* Bỏ margin mặc định của h1 để không bị lệch */
+    font-size: 24px;            /* Chỉnh size chữ cho vừa vặn */
+    min-width: 100px;           /* Giữ độ rộng cố định để khi đổi tháng chữ không bị nhảy */
+}
+.nav-month {
+    display: flex;              /* Để 2 cái mũi tên và chữ h1 nằm cùng hàng */
+    align-items: center;        /* Căn giữa chữ và icon */
+    gap: 15px;                  /* Khoảng cách giữa nút và chữ h1 */
+}
+
+.add-btn {
+    color: var(--ios-red);
+    font-size: 24px;
+    cursor: pointer;
+    border: none;
+    background: none;
+}
+
+/* Calendar Grid */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: var(--border-color);
+    border: 1px solid var(--border-color);
+}
+
+.day-header {
+    background: #f9f9f9;
+    padding: 10px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-sub);
+    font-weight: bold;
+}
+
+.day-cell.today {
+    color: var(--ios-red);
+    font-weight: bold;
+}
+
+.day-cell {
+    background: white;
+    height: 84px;
+    padding: 10px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 5px;
+    overflow: hidden;
+}
+
+.dot-container {
+    display: flex;
+    gap: 3px;
+    margin-top: 4px;
+    flex-direction: column;
+}
+/* Màu cho các chấm (Dot) trên lịch */
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 5px;
+    flex-shrink: 0;
+}
+
+/* --- Style chung cho dòng item trên lịch --- */
+.calendar-item-row {
+    display: flex;
+    align-items: center;
+    font-size: 11px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    /* CHIÊU QUYẾT ĐỊNH: Thêm padding và border-radius để màu nền hiện đẹp hơn */
+    padding: 2px 4px;
+    border-radius: 4px; /* Bo góc nhẹ kiểu iOS */
+    transition: background-color 0.2s, color 0.2s; /* Hiệu ứng chuyển màu mượt */
+}
+
+/* --- Định nghĩa màu cho từng trạng thái (Status) --- */
+
+/* 1. Trạng thái TRỄ HẠN / SỰ KIỆN (Màu Đỏ) */
+.calendar-item-row.status-overdue {
+    background-color: rgba(255, 59, 48, 0.15); /* Nền đỏ nhạt (Opacity 15%) */
+    color: #ff3b30; /* Chữ đỏ */
+}
+.calendar-item-row.status-overdue .dot { background-color: #ff3b30; }
+
+/* 2. Trạng thái HOÀN THÀNH (Màu Xanh lá) */
+.calendar-item-row.status-completed {
+    background-color: rgba(52, 199, 89, 0.15); /* Nền xanh lá nhạt */
+    color: #34c759; /* Chữ xanh lá */
+}
+.calendar-item-row.status-completed .dot { background-color: #34c759; }
+
+/* 3. Trạng thái CHƯA LÀM / SẮP TỚI (Màu Xanh Dương) */
+.calendar-item-row.status-pending {
+    background-color: rgba(0, 122, 255, 0.15); /* Nền xanh dương nhạt (15% opacity) */
+    color: #007aff; /* Chữ xanh dương chuẩn iOS */
+}
+
+/* Đồng bộ màu của chấm tròn (Dot) bên trong */
+.calendar-item-row.status-pending .dot { 
+    background-color: #007aff; 
+}
+
+/* Nếu bạn muốn Sự kiện (Event) vẫn giữ kiểu cũ hoặc đổi kiểu khác */
+.item-event {  
+    background-color: rgba(63, 168, 229, 0.15); 
+}
+
+.item-event .item-title-text {
+    color: #3FA8E5;    
+    font-weight: 500;
+    text-align: center; 
+}
+
+/* Tinh chỉnh lại chữ để căn giữa chuẩn hơn */
+.item-title-text {
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    max-width: 85px;
+}
