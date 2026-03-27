@@ -15,151 +15,136 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let notifiedIds = new Set();
 function updateRealtimeStatus() {
-    const nowInSec = Math.floor(Date.now() / 1000);
-    
-    // --- PHẦN 1: CẬP NHẬT GIAO DIỆN (Đỏ khi qua Deadline) ---
-    const items = document.querySelectorAll('.calendar-item-row');
-    items.forEach(itemRow => {
-        if (itemRow.classList.contains('status-completed')) return;
+  const nowInSec = Math.floor(Date.now() / 1000);
 
-        const deadlineTs = Number(itemRow.dataset.id); // Bây giờ ID là Deadline gốc
-        if (deadlineTs < nowInSec) {
-            if (!itemRow.classList.contains('status-overdue')) {
-                itemRow.classList.remove('status-pending');
-                itemRow.classList.add('status-overdue');
-            }
-        } else {
-            if (!itemRow.classList.contains('status-pending')) {
-                itemRow.classList.remove('status-overdue');
-                itemRow.classList.add('status-pending');
-            }
-        }
-    });
+  // --- CHỈ CẬP NHẬT GIAO DIỆN (Đổi màu đỏ/xanh) ---
+  const items = document.querySelectorAll(".calendar-item-row");
+  items.forEach((itemRow) => {
+    if (itemRow.classList.contains("status-completed")) return;
 
-    // --- PHẦN 2: KIỂM TRA THÔNG BÁO (Dựa trên mốc ID trừ đi early) ---
-    if (typeof allData !== 'undefined' && allData.length > 0) {
-        allData.forEach((item) => {
-            if (item.type === "reminder" && item.status !== "completed" && !notifiedIds.has(item.id)) {
-                
-                // Lấy số giây báo sớm
-                const earlySec = typeof convertEarlyToSeconds === 'function' ? convertEarlyToSeconds(item.early) : 0;
-                
-                // Thời điểm nổ thông báo = Deadline - Báo sớm
-                const triggerTime = item.id - earlySec;
-
-                if (nowInSec >= triggerTime) {
-                    const title = `🔔 LỜI NHẮC: ${item.title}`;
-                    const body = `Hạn chót: ${item.time} ngày ${item.date}\nHãy chuẩn bị thực hiện nhé!`;
-                    
-                    showNativeNotification(title, body);
-                    notifiedIds.add(item.id);
-                }
-            }
-        });
+    const deadlineTs = Number(itemRow.dataset.id); 
+    if (deadlineTs < nowInSec) {
+      if (!itemRow.classList.contains("status-overdue")) {
+        itemRow.classList.remove("status-pending");
+        itemRow.classList.add("status-overdue");
+      }
+    } else {
+      if (!itemRow.classList.contains("status-pending")) {
+        itemRow.classList.remove("status-overdue");
+        itemRow.classList.add("status-pending");
+      }
     }
+  });
 
-    if (typeof updateSidebarStats === "function" && typeof allData !== 'undefined') {
-        updateSidebarStats(allData);
-    }
+  // --- CẬP NHẬT THỐNG KÊ SIDEBAR ---
+  if (typeof updateSidebarStats === "function" && allData.length > 0) {
+    updateSidebarStats(allData);
+  }
 }
 
 async function renderCalendar(month, year) {
-    const grid = document.getElementById("calendarGrid");
-    const mainTitle = document.getElementById("mainMonthTitle");
-    if (mainTitle) mainTitle.innerText = `Tháng ${month + 1}`;
+  const grid = document.getElementById("calendarGrid");
+  const mainTitle = document.getElementById("mainMonthTitle");
+  if (mainTitle) mainTitle.innerText = `Tháng ${month + 1}`;
 
-    if (window.electronAPI) {
-        allData = await window.electronAPI.loadData();
+  if (window.electronAPI) {
+    allData = await window.electronAPI.loadData();
+  }
+
+  updateSidebarStats(allData);
+
+  // Xóa lưới cũ
+  const headers = grid.querySelectorAll(".day-header");
+  grid.innerHTML = "";
+  headers.forEach((h) => grid.appendChild(h));
+
+  let firstDay = new Date(year, month, 1).getDay();
+  let startDayOffset = firstDay === 0 ? 6 : firstDay - 1;
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  const nowInSec = Math.floor(Date.now() / 1000); // Tính 1 lần duy nhất ở đây
+
+  for (let i = 0; i < startDayOffset; i++) {
+    const emptyCell = document.createElement("div");
+    emptyCell.className = "day-cell other-month";
+    grid.appendChild(emptyCell);
+  }
+
+  const today = new Date();
+  for (let day = 1; day <= totalDays; day++) {
+    const cell = document.createElement("div");
+    cell.className = "day-cell";
+    if (
+      day === today.getDate() &&
+      month === today.getMonth() &&
+      year === today.getFullYear()
+    ) {
+      cell.classList.add("today");
     }
-    
-    updateSidebarStats(allData);
 
-    // Xóa lưới cũ
-    const headers = grid.querySelectorAll(".day-header");
-    grid.innerHTML = "";
-    headers.forEach((h) => grid.appendChild(h));
+    cell.innerHTML = `<span>${day}</span>`;
 
-    let firstDay = new Date(year, month, 1).getDay();
-    let startDayOffset = firstDay === 0 ? 6 : firstDay - 1;
-    const totalDays = new Date(year, month + 1, 0).getDate();
-    const nowInSec = Math.floor(Date.now() / 1000); // Tính 1 lần duy nhất ở đây
+    const dayString = `${day}/${month + 1}/${year}`;
+    const dayEvents = allData.filter((item) => {
+      const itemDate =
+        item.type === "event" ? item.start.split(" ")[0] : item.date;
+      return itemDate.trim() === dayString;
+    });
 
-    for (let i = 0; i < startDayOffset; i++) {
-        const emptyCell = document.createElement("div");
-        emptyCell.className = "day-cell other-month";
-        grid.appendChild(emptyCell);
-    }
+    cell.onclick = () => showDayDetails(day, month, year, dayEvents);
 
-    const today = new Date();
-    for (let day = 1; day <= totalDays; day++) {
-        const cell = document.createElement("div");
-        cell.className = "day-cell";
-        if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-            cell.classList.add("today");
+    if (dayEvents.length > 0) {
+      const dotContainer = document.createElement("div");
+      dotContainer.className = "dot-container";
+
+      // --- BƯỚC QUAN TRỌNG: Sắp xếp lại mảng ---
+      dayEvents.sort((a, b) => {
+        const isOverdueA = a.status !== "completed" && Number(a.id) < nowInSec;
+        const isOverdueB = b.status !== "completed" && Number(b.id) < nowInSec;
+
+        // Nếu A quá hạn mà B thì không -> đẩy A lên trước (-1)
+        if (isOverdueA && !isOverdueB) return -1;
+        // Nếu B quá hạn mà A thì không -> đẩy B lên trước (1)
+        if (!isOverdueA && isOverdueB) return 1;
+
+        return 0; // Giữ nguyên thứ tự nếu cả 2 cùng trạng thái
+      });
+
+      // Sau khi sort, lấy 3 mục đầu tiên (lúc này các mục đỏ đã nằm trên)
+      dayEvents.slice(0, 3).forEach((ev) => {
+        const itemRow = document.createElement("div");
+        itemRow.className = "calendar-item-row";
+        itemRow.dataset.id = ev.id;
+
+        // Gán màu (Logic giữ nguyên của bạn)
+        let rowStatusClass = "status-pending";
+        if (ev.status === "completed") {
+          rowStatusClass = "status-completed";
+        } else if (Number(ev.id) < nowInSec) {
+          rowStatusClass = "status-overdue"; // Màu đỏ
         }
 
-        cell.innerHTML = `<span>${day}</span>`;
-        
-        const dayString = `${day}/${month + 1}/${year}`;
-        const dayEvents = allData.filter(item => {
-            const itemDate = item.type === "event" ? item.start.split(" ")[0] : item.date;
-            return itemDate.trim() === dayString;
-        });
+        itemRow.classList.add(rowStatusClass);
 
-        cell.onclick = () => showDayDetails(day, month, year, dayEvents);
+        const dot = document.createElement("div");
+        dot.className = "dot";
 
-        if (dayEvents.length > 0) {
-          const dotContainer = document.createElement("div");
-          dotContainer.className = "dot-container";
+        const titleSpan = document.createElement("span");
+        titleSpan.className = "item-title-text";
+        titleSpan.innerText =
+          ev.type === "event" ? ev.title : `${ev.time} ${ev.title}`;
 
-          // --- BƯỚC QUAN TRỌNG: Sắp xếp lại mảng ---
-          dayEvents.sort((a, b) => {
-              const isOverdueA = a.status !== "completed" && Number(a.id) < nowInSec;
-              const isOverdueB = b.status !== "completed" && Number(b.id) < nowInSec;
+        if (ev.status === "completed") {
+          titleSpan.style.textDecoration = "line-through";
+          titleSpan.style.opacity = "0.5";
+        }
 
-              // Nếu A quá hạn mà B thì không -> đẩy A lên trước (-1)
-              if (isOverdueA && !isOverdueB) return -1;
-              // Nếu B quá hạn mà A thì không -> đẩy B lên trước (1)
-              if (!isOverdueA && isOverdueB) return 1;
-              
-              return 0; // Giữ nguyên thứ tự nếu cả 2 cùng trạng thái
-          });
-
-          // Sau khi sort, lấy 3 mục đầu tiên (lúc này các mục đỏ đã nằm trên)
-          dayEvents.slice(0, 3).forEach((ev) => {
-              const itemRow = document.createElement("div");
-              itemRow.className = "calendar-item-row";
-              itemRow.dataset.id = ev.id;
-
-              // Gán màu (Logic giữ nguyên của bạn)
-              let rowStatusClass = "status-pending";
-              if (ev.status === "completed") {
-                  rowStatusClass = "status-completed";
-              } else if (Number(ev.id) < nowInSec) {
-                  rowStatusClass = "status-overdue"; // Màu đỏ
-              }
-
-              itemRow.classList.add(rowStatusClass);
-
-              const dot = document.createElement("div");
-              dot.className = "dot";
-
-              const titleSpan = document.createElement("span");
-              titleSpan.className = "item-title-text";
-              titleSpan.innerText = ev.type === "event" ? ev.title : `${ev.time} ${ev.title}`;
-
-              if (ev.status === "completed") {
-                  titleSpan.style.textDecoration = "line-through";
-                  titleSpan.style.opacity = "0.5";
-              }
-
-              itemRow.append(dot, titleSpan);
-              dotContainer.appendChild(itemRow);
-          });
-          cell.appendChild(dotContainer);
-      }
-      grid.appendChild(cell);
+        itemRow.append(dot, titleSpan);
+        dotContainer.appendChild(itemRow);
+      });
+      cell.appendChild(dotContainer);
     }
+    grid.appendChild(cell);
+  }
 }
 
 // Logic Modal
@@ -202,6 +187,7 @@ function switchTab(type, element) {
     reminderFields.style.display = "block";
   }
 }
+
 function changeMonthHome(step) {
   currentMonth += step;
   if (currentMonth < 0) {
@@ -286,12 +272,11 @@ function updateSidebarStats(data) {
 
   // Tính mốc cuối tuần này (đến hết ngày Chủ Nhật)
   const today = new Date();
-  const distToSunday = 7 - today.getDay();
+  const distToSunday = today.getDay() === 0 ? 0 : 7 - today.getDay();
   const sunday = new Date(today);
   sunday.setDate(today.getDate() + (distToSunday === 7 ? 0 : distToSunday));
   sunday.setHours(23, 59, 59, 999); // Hết ngày chủ nhật
   const endOfWeekInSec = Math.floor(sunday.getTime() / 1000);
-
   // Lặp qua dữ liệu
   list.forEach((item) => {
     if (!item) return;
@@ -350,8 +335,7 @@ function showNativeNotification(title, message) {
     body: message,
     // CHIÊU QUYẾT ĐỊNH: Không tự tắt cho đến khi người dùng tương tác
     requireInteraction: true,
-    // (Tùy chọn) Có thể thêm icon app của ông ở đây
-    // icon: "path/to/icon.png",
+    icon: "./icon.png",
     silent: false, // Đảm bảo có tiếng chuông để gây chú ý
   };
 

@@ -117,8 +117,33 @@ function changeMonth(offset) {
 
 function openTimePicker(targetId) {
     const picker = document.getElementById('reminder-time-picker');
-    document.getElementById('reminder-calendar').style.display = 'none';
-    picker.classList.toggle('show');
+    const display = document.getElementById(targetId); // Đây là chỗ chứa "18:00"
+    
+    // 1. Ẩn lịch đi
+    const calendar = document.getElementById('reminder-calendar');
+    if (calendar) calendar.style.display = 'none';
+
+    // 2. Lấy thời gian hiện tại từ nhãn hiển thị (ví dụ "18:00")
+    const timeParts = display.innerText.split(':');
+    const currentHour = parseInt(timeParts[0]);
+    const currentMinute = parseInt(timeParts[1]);
+
+    // 3. Hiện picker lên trước (phải hiện lên thì mới cuộn được)
+    picker.classList.add('show');
+
+    // 4. Tìm 2 bánh xe
+    const hourWheel = document.getElementById('hour-wheel-reminder');
+    const minuteWheel = document.getElementById('minute-wheel-reminder');
+
+    // 5. Dùng setTimeout để đợi trình duyệt render xong cái "show" rồi mới cuộn
+    setTimeout(() => {
+        if (hourWheel) {
+            hourWheel.scrollTop = currentHour * 40;
+        }
+        if (minuteWheel) {
+            minuteWheel.scrollTop = currentMinute * 40;
+        }
+    }, 10); // 10ms là đủ để nó nhận lệnh
 }
 
 function updateReminderTimeDisplay() {

@@ -47,7 +47,21 @@ function setupPickerScroll(wheel, callback) {
     });
   });
 }
+function scrollToTime(timeStr) {
+    // 1. Tách chuỗi "18:00" thành [18, 0]
+    const [hour, minute] = timeStr.split(':').map(Number);
+    
+    const hourWheel = document.getElementById("hour-wheel-reminder");
+    const minuteWheel = document.getElementById("minute-wheel-reminder");
 
+    if (hourWheel && minuteWheel) {
+        // 2. Cuộn bánh xe giờ: Index chính là số giờ (0-23)
+        hourWheel.scrollTop = hour * 40;
+        
+        // 3. Cuộn bánh xe phút: Index chính là số phút (0-59)
+        minuteWheel.scrollTop = minute * 40;
+    }
+}
 // Hàm vẽ lịch "vạn năng"
 function renderUniversalCalendar(container, labelEl, viewDate, onSelect) {
   container.innerHTML = "";
@@ -357,7 +371,7 @@ async function handleUpdate() {
       await window.electronAPI.updateData(updatedItem);
     }
 
-    showStatusPanel("Thành công", "Đã cập nhật thông tin!");
+    showStatusPanel("Thành công", "Đã cập nhật thông tin!",true);
   }
 
   // 4. DỌN DẸP & CẬP NHẬT GIAO DIỆN

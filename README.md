@@ -4,4 +4,4 @@
 ## Cách cài đặt
 1. `npm install`
 2. `npm start` để chạy thử.
-3. `npm run make` để đóng gói phần mềm.s
+3. `npm run make` để đóng gói phần mềm.

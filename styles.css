@@ -130,6 +130,9 @@ body {
     gap: 3px;
     margin-top: 4px;
     flex-direction: column;
+    width: 100%;            /* Ép rộng bằng ô ngày */
+    box-sizing: border-box; /* Tính toán padding vào bên trong */
+    overflow: hidden;       /* Không cho lòi ra ngoài */
 }
 /* Màu cho các chấm (Dot) trên lịch */
 .dot {
@@ -149,7 +152,6 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    
     /* CHIÊU QUYẾT ĐỊNH: Thêm padding và border-radius để màu nền hiện đẹp hơn */
     padding: 2px 4px;
     border-radius: 4px; /* Bo góc nhẹ kiểu iOS */
@@ -201,5 +203,4 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.2;
-    max-width: 85px;
 }

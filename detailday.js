@@ -36,7 +36,9 @@ function showDayDetails(day, month, year, events) {
             content.innerHTML += `
                 <div class="detail-item ${statusClass}" onclick="prepareEdit('${evData}')">
                     <div class="detail-info">
-                        <div class="title">${ev.title}</div>
+                        <div class="title">
+                            ${ev.title}${ev.note ? ` - Chi tiết: ${ev.note}` : ""}
+                        </div>
                         <div class="time">
                             <i class="far fa-clock"></i> ${timeStr}
                         </div>
@@ -99,27 +101,33 @@ function showStatusPanel(title, message, isSuccess = true) {
     const content = document.getElementById("detailsContent");
     const dateTitle = document.getElementById("detailsDateTitle");
 
-    // 1. Thay tiêu đề (Ví dụ: "Thông báo" hoặc "Thành công")
+    // 1. Định nghĩa bộ màu (Chủ đạo và Nền nhạt)
+    const mainColor = isSuccess ? "#007aff" : "#ff3b30"; // Xanh đậm / Đỏ đậm
+    const bgColor = isSuccess ? "#e1f5fe" : "#ffebee";   // Xanh nhạt / Đỏ nhạt
+
+    // 2. Gán tiêu đề và màu chữ tiêu đề
     dateTitle.innerText = title;
-    dateTitle.style.color = isSuccess ? "#3fa8e5" : "#ff3b30"; // Xanh nếu thành công, đỏ nếu lỗi
+    dateTitle.style.color = mainColor; 
+
     overlay.style.display = 'flex'; 
-    
-    // Đảm bảo panel cũng hiện ra
     panel.style.display = 'block';
-    // 2. Thay nội dung HTML (Dùng style xanh đen ông thích)
+
+    // 3. Gán màu vào cái detail-item (Cái ông đang cần đây)
     content.innerHTML = `
-        <div class="detail-item" style="text-align: center; border-left: none;">
-            <div class="title" style="font-size: 22px; margin-bottom: 10px;">
+        <div class="detail-item" style="text-align: center; border-left: none; background-color: ${bgColor} !important; border: 1px solid ${mainColor}44;">
+            <div class="title" style="font-size: 28px; margin-bottom: 8px; color: ${mainColor};">
                 <i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
             </div>
-            <div class="time" style="justify-content: center; font-size: 16px; opacity: 1;">
+            <div class="time" style="justify-content: center; font-size: 16px; color: ${mainColor}; opacity: 1; font-weight: 500;">
                 ${message}
             </div>
         </div>
-        <button onclick="closeDetails()" style="width: 100%; padding: 12px; background: #3fa8e5; color: white; border: none; border-radius: 8px; margin-top: 15px; font-weight: bold; cursor: pointer;">
+        
+        <button onclick="closeDetails()" style="width: 100%; padding: 12px; background: ${mainColor}; color: white; border: none; border-radius: 12px; margin-top: 15px; font-weight: bold; cursor: pointer;">
             Xác nhận
         </button>
     `;
+
     setTimeout(() => {
         overlay.classList.add("active");
         panel.classList.add("active");
