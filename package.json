@@ -1,7 +1,8 @@
 {
   "name": "my-electron-app",
+  "productName": "iOS Desktop Calendar & Reminders",
   "version": "1.0.0",
-  "description": "Ung dung ghi chu cua XHieu",
+  "description": "Ung dung ghi chu",
   "main": "main.js",
   "scripts": {
     "start": "electron-forge start",
@@ -25,5 +26,26 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "icon": "./icon" 
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "setupIcon": "./icon.ico"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "win32"
+          ]
+        }
+      ]
+    }
   }
 }

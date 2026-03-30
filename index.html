@@ -43,7 +43,12 @@
                         <p style="font-weight: 500;">• Trong tuần này: <strong
                                 id="countThisWeek">0</strong></p>
                     </div>
-
+                    <div class="stat-group">
+                        <h3 style="font-size: 14px; margin-bottom: 5px; color: #8e8e93; text-transform: uppercase;">Lưu trữ</h3>
+                        <p style="font-size: 12px; color: #8e8e93; word-break: break-all; margin-top: 5px;">
+                            • Đường dẫn: <strong id="dataPath">C:\...</strong>
+                        </p>
+                    </div>
                 </div>
 
             </div>
@@ -78,115 +83,12 @@
             <div class="modal-header">
                 <span class="btn-cancel" onclick="closeModal()">Hủy</span>
                 <div class="tab-switch" style="width: 170px;">
-                    <div style="display: none;" class="tab" onclick="switchTab('event', this)">Sự kiện</div>
-                    <div class="tab active" onclick="switchTab('reminder', this)">Lời nhắc</div>
+                    <div class="tab active">Lời nhắc</div>
                 </div>
-                <span class="btn-add" onclick="handleSave()">Thêm</span>
+                <span class="btn-add" onclick="saveNewReminder()">Thêm</span>
             </div>
-
+            <!-- table add lời nhắc -->
             <div class="modal-body">
-                <div class="event-setup" id="event-fields" style="display: none;">
-                    <div class="input-group">
-                        <input type="text" id="event-title" placeholder="Tiêu đề">
-                        <input type="text" id="event-location" placeholder="Vị trí hoặc cuộc gọi video">
-                    </div>
-
-                    <div class="input-group" style="overflow: visible;">
-                        <div class="input-row">
-                            <span>Bắt đầu</span>
-                            <div class="datetime-display">
-                                <span class="time-box clickable"
-                                    onclick="toggleLocalPicker('picker-start-time')">17:00</span>
-                                <span class="date-box clickable"
-                                    onclick="toggleLocalPicker('picker-start-date')">18/3/26</span>
-                            </div>
-                        </div>
-                        <div id="picker-start-time" class="time-picker-container local-picker">
-                            <div class="picker-overlay"></div>
-                            <div class="wheel hour-wheel" data-target="start-time"></div>
-                            <div class="separator">:</div>
-                            <div class="wheel minute-wheel" data-target="start-time"></div>
-                        </div>
-                        <div id="picker-start-date" class="calendar-wrapper local-picker" style="display: none;">
-                            <div class="calendar-header-nav">
-                                <span class="month-year-label">Tháng 3 năm 2026</span>
-                                <div class="nav-btns">
-                                    <button onclick="changeMonthLocal(this, -1)"><i
-                                            class="fas fa-chevron-left"></i></button>
-                                    <button onclick="changeMonthLocal(this, 1)"><i
-                                            class="fas fa-chevron-right"></i></button>
-                                </div>
-                            </div>
-                            <div class="calendar-grid"></div>
-                        </div>
-
-                        <div class="divider"></div>
-
-                        <div class="input-row">
-                            <span>Kết thúc</span>
-                            <div class="datetime-display">
-                                <span class="time-box clickable"
-                                    onclick="toggleLocalPicker('picker-end-time')">18:00</span>
-                                <span class="date-box clickable"
-                                    onclick="toggleLocalPicker('picker-end-date')">18/3/26</span>
-                            </div>
-                        </div>
-                        <div id="picker-end-time" class="time-picker-container local-picker">
-                            <div class="picker-overlay"></div>
-                            <div class="wheel hour-wheel" data-target="end-time"></div>
-                            <div class="separator">:</div>
-                            <div class="wheel minute-wheel" data-target="end-time"></div>
-                        </div>
-                        <div id="picker-end-date" class="calendar-wrapper local-picker" style="display: none;">
-                            <div class="calendar-header-nav">
-                                <span class="month-year-label">Tháng 3 năm 2026</span>
-                                <div class="nav-btns">
-                                    <button onclick="changeMonthLocal(this, -1)"><i
-                                            class="fas fa-chevron-left"></i></button>
-                                    <button onclick="changeMonthLocal(this, 1)"><i
-                                            class="fas fa-chevron-right"></i></button>
-                                </div>
-                            </div>
-                            <div class="calendar-grid"></div>
-                        </div>
-
-                        <div class="input-group" style="overflow: visible;">
-                            <div class="input-row clickable" onclick="toggleTravelPicker()">
-                                <span>Thời gian di chuyển</span>
-                                <div class="row-right">
-                                    <span class="sub-text" id="travel-time-display">Không có</span>
-                                    <i class="fas fa-chevron-down selector-icon" id="travel-chevron"></i>
-                                </div>
-                            </div>
-                            <div id="travel-picker-container" class="time-picker-container">
-                                <div class="picker-overlay"></div>
-                                <div class="wheel" id="travel-number-wheel"></div>
-                                <div class="wheel" id="travel-unit-wheel"></div>
-                            </div>
-                        </div>
-
-                        <div class="divider"></div>
-
-                        <div class="input-group">
-                            <div class="input-row clickable"
-                                onclick="toggleLocalPicker('event-early-picker-container')">
-                                <div class="row-left">
-                                    <div class="icon-bg purple"><i class="fas fa-bell"></i></div>
-                                    <span class="main-label">Lời nhắc sớm</span>
-                                </div>
-                                <div class="row-right">
-                                    <span class="sub-text" id="early-event-display" style="color: #8e8e93;"></span>
-                                    <i class="fas fa-chevron-down selector-icon" id="early-chevron"></i>
-                                </div>
-                            </div>
-                            <div id="event-early-picker-container" class="time-picker-container">
-                                <div class="picker-overlay"></div>
-                                <div class="wheel" id="event-early-number-wheel"></div>
-                                <div class="wheel" id="event-early-unit-wheel"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <div class="ios-container" id="reminder-fields">
                     <div class="input-group">
                         <input type="text" class="ios-input" placeholder="Tiêu đề">
@@ -200,7 +102,7 @@
                                 <span class="main-label">Trạng thái</span>
                             </div>
                             <div class="row-right">
-                                <span id="completion-status-text" class="status-text overdue">[x] chưa làm</span>
+                                <span id="completion-status-text" class="status-text overdue"></span>
                             </div>
                         </div>
                     </div>
