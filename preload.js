@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveData: (data) => ipcRenderer.invoke('save-data', data),
     updateData: (data) => ipcRenderer.invoke('update-data', data),
     deleteData: (id) => ipcRenderer.invoke('delete-data', id), // THÊM DÒNG NÀY
+    getPathSaveFile: () => ipcRenderer.invoke('get-path-save-file') // THÊM DÒNG NÀY
 });
