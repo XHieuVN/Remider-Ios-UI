@@ -201,8 +201,73 @@ function convertEarlyToSeconds(earlyTxt) {
   return seconds;
 }
 
-// Hàm chuyển đổi Timestamp (giây) thành chuỗi DD/MM/YYYY HH:mm:ss
+async function handleExtractedDataToSystem(extractedData) {
+    const rawTimeStr = extractedData.time; // "Ngày 01/4/2026 (thứ Tư); sáng từ 08h00, chiều từ 14h00"
+    
+    // 1. Tách ngày và định dạng lại thành DD/MM/YYYY
+    const dateMatch = rawTimeStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (!dateMatch) {
+        console.error("Không tìm thấy định dạng ngày phù hợp.");
+        return;
+    }
+    // Thay đổi ở dòng này: Đưa [1] (Ngày) lên trước, [2] (Tháng) ở giữa, [3] (Năm) ở cuối
+    const dateStr = `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]}`;
 
+    // 2. Tách tất cả các khung giờ (Tìm tất cả các dạng HHhMM)
+    const timeMatches = Array.from(rawTimeStr.matchAll(/(\d{1,2})h(\d{2})/g));
+    const timeSlots = timeMatches.map(m => `${m[1].padStart(2, '0')}:${m[2].padStart(2, '0')}`);
+
+    // console.log("Các khung giờ đã trích xuất:", timeSlots);
+    // console.log("Ngày đã trích xuất:", dateStr);
+
+    if (timeSlots.length === 0) {
+        console.error("Không tìm thấy khung giờ.");
+        return;
+    }
+    
+    
+    // 3. Lặp qua từng khung giờ để tạo và lưu Reminder
+    for (const timeStr of timeSlots) {
+        const title = extractedData.contentName;
+        const note = "";
+        const earlyStr = "Trước 15 phút"; // Có thể mặc định báo trước 15 phút
+
+        const newReminder = {
+            id: Date.now(), // Thêm số ngẫu nhiên để tránh trùng ID khi tạo nhanh trong loop
+            title: title + " - Địa điểm: " + extractedData.location, // Thêm thời gian vào tiêu đề để dễ phân biệt
+            note: note,
+            date: dateStr, // Lúc này dateStr sẽ là "1/4/2026"
+            time: timeStr,
+            timeNum: typeof TimeTxtToNum === "function" ? TimeTxtToNum(dateStr, timeStr) : 0,
+            early: earlyStr,
+            timeNotification: typeof calcTimeNotification === "function" ? calcTimeNotification(dateStr, timeStr, earlyStr) : "",
+            isOverdue: false,
+            status: "pending", // Mặc định là chờ xử lý
+            hasNotified: false,
+        };
+
+        console.log("Đang xử lý lời nhắc:", newReminder);
+
+        // Gọi logic lưu vào Electron
+        if (window.electronAPI) {
+            const result = await window.electronAPI.saveData(newReminder);
+            if (result) {
+                console.log(`Lưu thành công khung giờ ${timeStr}`);
+            }
+        }
+    }
+
+    // Sau khi chạy xong vòng lặp thì cập nhật UI một lần
+    if (typeof refreshApp === "function") {
+        await refreshApp();
+    } else if (typeof renderCalendar === "function") {
+        renderCalendar(currentMonth, currentYear);
+    }
+    
+    if (typeof showStatusPanel === "function") {
+        showStatusPanel("Thông báo", `Đã tự động thêm ${timeSlots.length} lời nhắc từ file! \n Tên văn bản: ${newReminder.title} \n Thời gian: ${newReminder.time} \n Địa điểm: ${newReminder.location} `, true);
+    }
+}
 
 // lưu dữ liệu ở reminer
 async function saveNewReminder() {

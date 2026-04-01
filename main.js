@@ -21,13 +21,11 @@ let win = null;
 let cachedReminders = [];
 const DATA_PATH = path.join(app.getPath("userData"), "calendar-data.json");
 
-
-// --- KẾT THÚC PHẦN THÊM ---
-
 // --- HELPER FUNCTIONS ---
 function getDataFromFile() {
   try {
     if (fs.existsSync(DATA_PATH)) {
+      console.log("Reading data from file:", DATA_PATH);
       const fileContent = fs.readFileSync(DATA_PATH, "utf-8");
       return JSON.parse(fileContent || "[]");
     }
@@ -42,72 +40,72 @@ function refreshCache() {
 
 // --- LOGIC 1: THÔNG BÁO TỔNG HỢP (Mở máy & Mỗi 12 giờ) ---
 function showPeriodicSummary() {
-  const now = Math.floor(Date.now() / 1000);
-  const overdueItems = cachedReminders.filter(i => i.status === "pending" && i.timeNum < now);
+  // const now = Math.floor(Date.now() / 1000);
+  // const overdueItems = cachedReminders.filter(i => i.status === "pending" && i.timeNum < now);
 
-  if (overdueItems.length > 0) {
-    // Nếu có trễ hạn: Thông báo tổng số
-    new Notification({
-      title: "Quá Hạn",
-      body: `Bạn có ${overdueItems.length} công việc đã QUÁ HẠN, bạn cần chú ý hoàn thành chúng!`,
-    }).show();
-  } else {
-    // Nếu không có trễ hạn: Thông báo deadline gần nhất
-    const upcoming = cachedReminders
-      .filter(i => i.status === "pending" && i.timeNum >= now)
-      .sort((a, b) => a.timeNum - b.timeNum);
+  // if (overdueItems.length > 0) {
+  //   // Nếu có trễ hạn: Thông báo tổng số
+  //   new Notification({
+  //     title: "Quá Hạn",
+  //     body: `Bạn có ${overdueItems.length} công việc đã QUÁ HẠN, bạn cần chú ý hoàn thành chúng!`,
+  //   }).show();
+  // } else {
+  //   // Nếu không có trễ hạn: Thông báo deadline gần nhất
+  //   const upcoming = cachedReminders
+  //     .filter(i => i.status === "pending" && i.timeNum >= now)
+  //     .sort((a, b) => a.timeNum - b.timeNum);
 
-    if (upcoming.length > 0) {
-      const nearest = upcoming[0];
-      new Notification({
-        title: "Công việc tiếp theo",
-        body: `Tên: ${nearest.title}\nHạn: ${nearest.time} ${nearest.date}`,
-      }).show();
-    }
-  }
+  //   if (upcoming.length > 0) {
+  //     const nearest = upcoming[0];
+  //     new Notification({
+  //       title: "Công việc tiếp theo",
+  //       body: `Tên: ${nearest.title}\nHạn: ${nearest.time} ${nearest.date}`,
+  //     }).show();
+  //   }
+  // }
 }
 
 // --- LOGIC 2: VÒNG LẶP THÔNG BÁO CHI TIẾT (Check mỗi 30s) ---
 function startReminderLoop() {
-  setInterval(() => {
-    const now = Math.floor(Date.now() / 1000);
-    console.log(`Checking reminders at ${now}...`);
-    let hasChanges = false;
+  // setInterval(() => {
+  //   const now = Math.floor(Date.now() / 1000);
+  //   console.log(`Checking reminders at ${now}...`);
+  //   let hasChanges = false;
 
-    cachedReminders.forEach((item) => {
-      if (item.status === "pending" && !item.hasNotified) {
-        const earlySec = convertEarlyToSeconds(item.early);
-        const timeDiff = item.timeNotification - now;
-        console.log(`item: ${item}`);
-        console.log(`Checking item: ${item.title} (Notify at: ${item.timeNotification}, Now: ${now}, Diff: ${timeDiff}s)`);
-        // Báo khi đến thời điểm notificationTime (sai số trong khoảng 60s)
-        if (timeDiff < 120) {
-          const deadlineStr = convertTimeToStr(item.timeNum);           // Thời gian Deadline
-          const scheduledAtStr = convertTimeToStr(item.timeNotification); // Thời gian đúng lịch phải báo
-          const actualAtStr = convertTimeToStr(now);               // Thời gian thực tế đang báo
-          const notifyEarlySec = convertTimeToStr(earlySec);        // Thời gian cài đặt báo sớm (chuyển sang định dạng dễ đọc)
-          const isOverdue = item.timeNotification < now;
-          const notifyTitle = isOverdue ? `⚠️ Quá hạn: ${item.title}` : `🔔 Công việc: ${item.title}`;
-          const notifyBody = `Hạn: ${item.time} ${item.date}\n${item.note ? `Chi tiết: ${item.note}` : ""}`;
-          // const notifyBody = 
-          //               `📌 Deadline: ${deadlineStr}\n` +
-          //               `⏰ Cài đặt báo sớm: ${notifyEarlySec || "Không"}\n` +
-          //               `⏲️ Lịch báo dự kiến: ${scheduledAtStr}\n` +
-          //               `📡 Thực tế báo lúc: ${actualAtStr}\n` +
-          //               `⏳ Sai lệch: ${timeDiff} giây\n` +
-          //               `📝 Ghi chú: ${item.note || "Trống"}`;
-          new Notification({ title: notifyTitle, body: notifyBody }).show();
-          console.log(`HasNotification: ${item.title} (Deadline: ${deadlineStr}, Notify at: ${scheduledAtStr}, Actual: ${actualAtStr}, Early: ${notifyEarlySec})`);
-          item.hasNotified = true;
-          hasChanges = true;
-        }
-      }
-    });
+  //   cachedReminders.forEach((item) => {
+  //     if (item.status === "pending" && !item.hasNotified) {
+  //       const earlySec = convertEarlyToSeconds(item.early);
+  //       const timeDiff = item.timeNotification - now;
+  //       console.log(`item: ${item}`);
+  //       console.log(`Checking item: ${item.title} (Notify at: ${item.timeNotification}, Now: ${now}, Diff: ${timeDiff}s)`);
+  //       // Báo khi đến thời điểm notificationTime (sai số trong khoảng 60s)
+  //       if (timeDiff < 120) {
+  //         const deadlineStr = convertTimeToStr(item.timeNum);           // Thời gian Deadline
+  //         const scheduledAtStr = convertTimeToStr(item.timeNotification); // Thời gian đúng lịch phải báo
+  //         const actualAtStr = convertTimeToStr(now);               // Thời gian thực tế đang báo
+  //         const notifyEarlySec = convertTimeToStr(earlySec);        // Thời gian cài đặt báo sớm (chuyển sang định dạng dễ đọc)
+  //         const isOverdue = item.timeNotification < now;
+  //         const notifyTitle = isOverdue ? `⚠️ Quá hạn: ${item.title}` : `🔔 Công việc: ${item.title}`;
+  //         const notifyBody = `Hạn: ${item.time} ${item.date}\n${item.note ? `Chi tiết: ${item.note}` : ""}`;
+  //         // const notifyBody = 
+  //         //               `📌 Deadline: ${deadlineStr}\n` +
+  //         //               `⏰ Cài đặt báo sớm: ${notifyEarlySec || "Không"}\n` +
+  //         //               `⏲️ Lịch báo dự kiến: ${scheduledAtStr}\n` +
+  //         //               `📡 Thực tế báo lúc: ${actualAtStr}\n` +
+  //         //               `⏳ Sai lệch: ${timeDiff} giây\n` +
+  //         //               `📝 Ghi chú: ${item.note || "Trống"}`;
+  //         new Notification({ title: notifyTitle, body: notifyBody }).show();
+  //         console.log(`HasNotification: ${item.title} (Deadline: ${deadlineStr}, Notify at: ${scheduledAtStr}, Actual: ${actualAtStr}, Early: ${notifyEarlySec})`);
+  //         item.hasNotified = true;
+  //         hasChanges = true;
+  //       }
+  //     }
+  //   });
 
-    if (hasChanges) {
-      fs.writeFileSync(DATA_PATH, JSON.stringify(cachedReminders, null, 2));
-    }
-  }, 30000);
+  //   if (hasChanges) {
+  //     fs.writeFileSync(DATA_PATH, JSON.stringify(cachedReminders, null, 2));
+  //   }
+  // }, 30000);
 }
 
 
@@ -187,10 +185,7 @@ function createTray() {
 // IPC Handlers... (Giữ nguyên phần ipcMain.handle của ông)
 ipcMain.handle("load-from-json", async () => getDataFromFile());
 ipcMain.handle('get-path-save-file', async () => {
-    // Trả về đường dẫn thực tế bạn đang lưu file data.json
-    // Ví dụ lưu ở thư mục userData của hệ thống:
-    const dataFilePath = path.join(app.getPath('userData'), 'data.json'); 
-    return dataFilePath;
+    return DATA_PATH;
 });
 ipcMain.handle("update-data", async (event, updatedItem) => {
     try {

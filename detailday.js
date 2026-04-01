@@ -82,11 +82,11 @@ function prepareEdit(jsonStr) {
     document.getElementById('reminder-early-display').innerText = ev.early;
 
     if (ev.status === "completed") {
-        completionStatusTxt.innerText = "[v] đã làm";
+        completionStatusTxt.innerText = "Đã Hoàn Thành";
         completionStatusTxt.className = "status-text completed";
         document.getElementById("status-icon-bg").className = "icon-bg success-green";
     } else {
-        completionStatusTxt.innerText = "[x] chưa làm";
+        completionStatusTxt.innerText = "Chưa Hoàn Thành";
         completionStatusTxt.className = "status-text overdue";
         document.getElementById("status-icon-bg").className = "icon-bg gray";
     }

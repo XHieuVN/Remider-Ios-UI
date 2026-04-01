@@ -8,8 +8,8 @@ let allData = [];
 document.addEventListener("DOMContentLoaded", () => {
   renderCalendar(currentMonth, currentYear);
   displayDataPath();
-  // Chạy hàm cập nhật trạng thái mỗi giây (rất nhẹ)
-  setInterval(updateRealtimeStatus, 1000);
+  // Chạy hàm cập nhật trạng thái 2 giây (rất nhẹ)
+  setInterval(updateRealtimeStatus, 2000);
   ; // Lấy đường dẫn lưu file và hiển thị lên giao diện
 });
 
@@ -68,6 +68,7 @@ async function renderCalendar(month, year) {
 
   if (window.electronAPI) {
     allData = await window.electronAPI.loadData();
+    console.log("Dữ liệu đã tải:", allData);
   }
 
   updateSidebarStats(allData);
@@ -101,6 +102,7 @@ async function renderCalendar(month, year) {
     }
 
     cell.innerHTML = `<span>${day}</span>`;
+
 
     const dayString = `${day}/${month + 1}/${year}`;
     const dayReminders = allData.filter((item) => {
@@ -285,38 +287,223 @@ function updateSidebarStats(data) {
 
 function showNativeNotification(title, message) {
   // Kiểm tra xem trình duyệt/Electron có hỗ trợ thông báo không
-  if (!("Notification" in window)) {
-    console.error("Trình duyệt không hỗ trợ thông báo.");
-    return;
-  }
+  // if (!("Notification" in window)) {
+  //   console.error("Trình duyệt không hỗ trợ thông báo.");
+  //   return;
+  // }
 
-  const options = {
-    body: message,
-    // CHIÊU QUYẾT ĐỊNH: Không tự tắt cho đến khi người dùng tương tác
-    requireInteraction: true,
-    icon: "./icon.ico",
-    silent: false, // Đảm bảo có tiếng chuông để gây chú ý
-  };
+  // const options = {
+  //   body: message,
+  //   // CHIÊU QUYẾT ĐỊNH: Không tự tắt cho đến khi người dùng tương tác
+  //   requireInteraction: true,
+  //   icon: "./icon.ico",
+  //   silent: false, // Đảm bảo có tiếng chuông để gây chú ý
+  // };
 
-  const notification = new Notification(title, options);
+  // const notification = new Notification(title, options);
 
-  // Khi người dùng click vào thông báo
-  notification.onclick = function (event) {
-    event.preventDefault(); // Ngăn chặn xử lý mặc định
+  // // Khi người dùng click vào thông báo
+  // notification.onclick = function (event) {
+  //   event.preventDefault(); // Ngăn chặn xử lý mặc định
 
-    // 1. Mở lại cửa sổ App (Nếu đang ẩn)
-    if (
-      window.electronAPI &&
-      typeof window.electronAPI.focusApp === "function"
-    ) {
-      window.electronAPI.focusApp();
-    } else {
-      window.focus(); // Cách thông thường cho trình duyệt
+  //   // 1. Mở lại cửa sổ App (Nếu đang ẩn)
+  //   if (
+  //     window.electronAPI &&
+  //     typeof window.electronAPI.focusApp === "function"
+  //   ) {
+  //     window.electronAPI.focusApp();
+  //   } else {
+  //     window.focus(); // Cách thông thường cho trình duyệt
+  //   }
+
+  //   // 2. Tắt thông báo sau khi đã click
+  //   notification.close();
+
+  //   console.log("Người dùng đã xem và tắt thông báo.");
+  // };
+}
+
+const dropZone = document.getElementById('pdfDropZone');
+const fileInput = document.getElementById('pdfFileInput');
+
+// 1. Khi click vào drop zone, kích hoạt thẻ input ẩn để mở hộp thoại chọn tệp
+dropZone.addEventListener('click', () => {
+    fileInput.click();
+});
+
+// 2. Ngăn chặn hành vi mặc định của trình duyệt (thường là mở file sang tab mới) khi kéo thả
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+// 4. Xử lý sự kiện khi thả tệp (Drag & Drop)
+dropZone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    handleFiles(files);
+}, false);
+
+// 5. Xử lý sự kiện khi chọn tệp từ máy tính (Click)
+fileInput.addEventListener('change', function() {
+    handleFiles(this.files);
+    // Reset lại giá trị input để có thể chọn lại chính file đó ở lần sau nếu cần
+    this.value = null; 
+});
+
+// Hàm kiểm tra và chuyển tiếp tệp đi xử lý
+function handleFiles(files) {
+    if (files.length === 0) return;
+
+    const file = files[0]; // Chỉ lấy file đầu tiên nếu người dùng thả nhiều file
+
+    // Kiểm tra định dạng PDF
+    if (file.type !== 'application/pdf') {
+        alert('Vui lòng chọn một tệp PDF hợp lệ.');
+        return;
     }
 
-    // 2. Tắt thông báo sau khi đã click
-    notification.close();
+    console.log('Đã nhận tệp:', file.name);
+    
+    // Gửi tệp thẳng vào hàm xử lý
+    processPDF(file);
+}
 
-    console.log("Người dùng đã xem và tắt thông báo.");
-  };
+const pdfjsLib = window['pdfjs-dist/build/pdf'];
+// Cấu hình worker (bắt buộc) bằng link CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// Hàm xử lý chính được gọi từ sự kiện Drop hoặc Input file
+async function processPDF(file) {
+    if (!file) return;
+
+    console.log('Bắt đầu xử lý file:', file.name);
+
+    let imageToRead = null;
+    let fileNameExtracted = "";
+
+    try {
+        // 1. XỬ LÝ TÊN FILE VÀ ĐỌC NỘI DUNG PDF
+        if (file.type === 'application/pdf') {
+            // Trích xuất tên từ file
+            const nameMatch = file.name.match(/^.*?\([^)]+\)\s*(.*?)(?:\.pdf)$/i);
+            if (nameMatch && nameMatch[1]) {
+                fileNameExtracted = nameMatch[1].trim();
+            } else {
+                fileNameExtracted = file.name.replace(/\.pdf$/i, '').trim();
+            }
+
+            console.log('Đang chuyển đổi trang PDF thành hình ảnh ngầm...');
+            
+            // Đọc dữ liệu file
+            const arrayBuffer = await file.arrayBuffer();
+            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+            const pdf = await loadingTask.promise;
+            
+            // Lấy trang 1
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 2.0 });
+            
+            // TẠO CANVAS ẢO ĐỂ XỬ LÝ (Không hiện lên UI)
+            const virtualCanvas = document.createElement('canvas');
+            const context = virtualCanvas.getContext('2d');
+            virtualCanvas.width = viewport.width;
+            virtualCanvas.height = viewport.height;
+            
+            // Render PDF lên canvas ảo
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+            
+            // Trích xuất dữ liệu ảnh từ canvas ảo
+            imageToRead = virtualCanvas.toDataURL('image/png');
+
+        } else if (file.type.startsWith('image/')) {
+            // Dự phòng trường hợp thả file ảnh
+            fileNameExtracted = file.name.replace(/\.(png|jpg|jpeg)$/i, '').trim();
+            imageToRead = URL.createObjectURL(file);
+        } else {
+            console.error('Định dạng tệp không được hỗ trợ. Vui lòng thả file PDF.');
+            return;
+        }
+
+        // 2. BẮT ĐẦU CHẠY OCR BẰNG TESSERACT
+        console.log('Đang chạy nhận diện chữ (OCR)...');
+        toggleLoadingState('loading', 'AI đang trích xuất dữ liệu PDF...');
+        const { data: { text } } = await Tesseract.recognize(
+            imageToRead,
+            'vie', 
+            // Có thể tắt luôn logger nếu không muốn hiện tiến trình trong console
+            { logger: m => console.log(`Tiến trình OCR: ${m.status} - ${Math.round(m.progress * 100)}%`) }
+        );
+        
+        // 3. LỌC DỮ LIỆU TỪ KẾT QUẢ OCR
+        const timeRegex = /th[ờòoởi]?i\s*gian\s*:\s*([^\n.]+)/i;
+        const locationRegex = /[đd][ịi]a\s*[đd][iỉĩíì]?[ểẻe]m\s*:\s*([^.]+)/i;
+
+        const timeMatch = text.match(timeRegex);
+        const locationMatch = text.match(locationRegex);
+
+        const timeStr = timeMatch ? timeMatch[1].trim() : showStatusPanel("Thông báo", "Không tìm thấy dữ liệu thời gian", false); 
+        const locationStr = locationMatch ? locationMatch[1].trim() : showStatusPanel("Thông báo", "Không tìm thấy dữ liệu địa điểm",false);
+
+        // 4. KẾT QUẢ CUỐI CÙNG LƯU TRONG BIẾN
+        const extractedData = {
+            contentName: fileNameExtracted,
+            time: timeStr,
+            location: locationStr
+        };
+        toggleLoadingState('loaded', 'Đã lấy dữ liệu thành công! ');
+        // Xem kết quả ở Console thay vì hiển thị lên UI
+        console.log('--- TRÍCH XUẤT THÀNH CÔNG ---');
+        console.log('Dữ liệu lấy được:', extractedData);
+        handleExtractedDataToSystem(extractedData); // Hàm này bạn tự định nghĩa để đưa dữ liệu vào hệ thống của bạn (như tạo Reminder mới, v.v.)
+
+    } catch (error) {
+        console.error('Có lỗi xảy ra trong quá trình xử lý PDF/OCR:', error);
+    }
+}
+
+/**
+ * Hàm hiển thị màn hình Loading
+ * @param {string} state - 'loading' (đang xoay) hoặc 'loaded' (tick xanh thành công)
+ * @param {string} message - Dòng chữ hiển thị bên dưới icon
+ */
+function toggleLoadingState(state, message = "") {
+    const overlay = document.getElementById("loadingOverlay");
+    const icon = document.getElementById("loadingIcon");
+    const text = document.getElementById("loadingText");
+
+    if (!overlay) return;
+
+    if (state === "loading") {
+        // 1. Chế độ ĐANG TẢI (Xoay)
+        overlay.style.display = "flex";
+        
+        // Dùng setTimeout để CSS transition opacity có thời gian kích hoạt
+        setTimeout(() => {
+            overlay.classList.add("active");
+        }, 10);
+        
+        // Gắn icon spinner và hiệu ứng xoay
+        icon.className = "fas fa-spinner loading-spinner";
+        text.innerText = message || "Đang xử lý...";
+        
+    } else if (state === "loaded") {
+        // 2. Chế độ ĐÃ XONG (Dấu tick xanh)
+        // Gắn icon check và gỡ bỏ hiệu ứng xoay
+        icon.className = "fas fa-check-circle loading-success";
+        text.innerText = message || "Thành công!";
+
+        // Tự động ẩn loading popup sau 1.5 giây
+        setTimeout(() => {
+            overlay.classList.remove("active"); // Làm mờ đi
+            
+            // Chờ mờ hẳn (0.3s theo CSS) rồi mới ẩn display
+            setTimeout(() => {
+                overlay.style.display = "none";
+            }, 300);
+        }, 1500);
+    }
 }

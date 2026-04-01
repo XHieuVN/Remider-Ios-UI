@@ -25,12 +25,13 @@
     "electron": "^41.0.3"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "pdfjs-dist": "^5.6.205"
   },
   "config": {
     "forge": {
       "packagerConfig": {
-        "icon": "./icon" 
+        "icon": "./icon"
       },
       "makers": [
         {

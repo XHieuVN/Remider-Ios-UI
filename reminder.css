@@ -1,4 +1,29 @@
 /* Modal "Thêm mới" giống iOS */
+
+.pdf-drop-zone {
+    margin-top: 15px;
+    padding: 15px;
+    border: 2px dashed #c7c7cc; /* Màu xám nhẹ kiểu iOS */
+    border-radius: 12px;       /* Bo tròn góc */
+    text-align: center;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pdf-drop-zone p {
+    margin: 5px 0 0 0;
+    font-size: 12px;
+    color: #8e8e93;
+}
+
+/* Hiệu ứng khi kéo file đè lên hoặc di chuột qua */
+.pdf-drop-zone:hover, .pdf-drop-zone.dragover {
+    border-color: var(--ios-blue); /* Sử dụng biến màu xanh bạn đang có */
+    background-color: #f2f2f7;
+    color: var(--ios-blue);
+}
+
 .modal-overlay {
     display: none;
     position: fixed;

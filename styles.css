@@ -204,3 +204,58 @@ body {
     text-overflow: ellipsis;
     line-height: 1.2;
 }
+/* --- LOADING OVERLAY --- */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(2px); /* Hiệu ứng mờ nền chuẩn iOS */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.loading-overlay.active {
+    opacity: 1;
+}
+
+.loading-content {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px 40px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.loading-spinner {
+    font-size: 32px;
+    color: #007aff; /* Màu xanh iOS */
+    animation: spin 1s linear infinite; /* Gọi hiệu ứng xoay */
+    margin-bottom: 12px;
+}
+
+.loading-success {
+    font-size: 32px;
+    color: #34c759; /* Màu xanh lá thành công chuẩn iOS */
+    margin-bottom: 12px;
+}
+
+#loadingText {
+    font-size: 15px;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Khung hình (keyframes) cho hiệu ứng xoay */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
